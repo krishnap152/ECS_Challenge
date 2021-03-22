@@ -122,6 +122,7 @@ def validate_put_data(post_data,request_data):
                 return True
             else:
                 return False
+
         return True
 
     else:
@@ -152,11 +153,14 @@ def create_course():
     """
     # YOUR CODE HERE
     request_data = request.get_json()
-    description = request_data.get('description',None)
+    description = None if len(request_data.get('description',None)) >=255\
+                  else request_data.get('description',None)
     discount_price = request_data.get('discount_price',None)
-    title = request_data.get('title',None)
+    title = request_data.get('title',None) if len(request_data.get('title',None)) >=5 and len(request_data.get('title',None)) <=100\
+                  else None
     price = request_data.get('price',None)
-    image_path = request_data.get('image_path',None)
+    image_path = None if len(request_data.get('image_path',None)) >=100\
+                  else request_data.get('image_path',None)
     on_discount = request_data.get("on_discount",None)
 
     id = max(data.load_data(), key=lambda x:x['id'])
@@ -177,17 +181,27 @@ def create_course():
     courses = data.load_data()
 
     if validate_post_data(payload):
-        courses.append(payload)
-        with open("./json/course.json", "w") as outfile:
-            json.dump(courses, outfile)
 
-        response = app.response_class(
-            response=json.dumps({
-                "data": payload
-            }
-            ),
-            status=200,
-            mimetype='application/json')
+        if payload["description"] != None and payload["title"] !=None and payload["image_path"] !=None:
+
+            courses.append(payload)
+            with open("./json/course.json", "w") as outfile:
+                json.dump(courses, outfile)
+
+            response = app.response_class(
+                response=json.dumps({
+                    "data": payload
+                }
+                ),
+                status=200,
+                mimetype='application/json')
+        else:
+            msg = {"message": "The id does match the payload"}
+            response = app.response_class(
+                response=json.dumps(msg),
+                status=400,
+                mimetype='application/json'
+            )
     else:
         msg = {"message": "The id does match the payload"}
         response = app.response_class(
